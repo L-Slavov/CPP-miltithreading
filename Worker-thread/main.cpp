@@ -3,44 +3,35 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <queue>
-
-std::mutex m;
-std::condition_variable cv;
+#include "Channel.h"
 
 
-void worker_thread(std::queue<std::string>* data)
+
+void worker_thread(Channel<std::string>* data)
 {
     while(true){
-        std::unique_lock<std::mutex> lk(m);
-        cv.wait(lk,[data]{ return !data->empty();});
-        if(data->front() == "END"){
-            data->pop();
+        auto Channeldata = data->get();
+        if(Channeldata == "END"){
             break;
         }
-        std::cout << "Worker says: " << data->front() << std::endl;
-        data->pop();
-        lk.unlock();
+        std::cout << "Worker says: " << Channeldata << std::endl;
     }
     std::cout << "Exiting loop" << std::endl;
 }
 
 int main()
 {
+    Channel<std::string>* myChan = new Channel<std::string>;
 
-    std::queue<std::string>* data = new std::queue<std::string>;
+    myChan->put("Hello");
+    myChan->put("World");
 
-
-    data->push("Hello");
-    data->push("World!");
-
-    std::thread worker(worker_thread,data);
+    std::thread worker(worker_thread,myChan);
 
     while (true){
         std::string input;
         std::cin >> input;
-        data->push(input);
-        cv.notify_one();
+        myChan->put(input);
         if(input == "END"){
             break;
         }
