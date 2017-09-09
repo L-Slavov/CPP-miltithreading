@@ -7,10 +7,10 @@
 
 
 
-void worker_thread(Channel<std::string>* data)
+void worker_thread(Channel<std::string>& data)
 {
     while(true){
-        auto Channeldata = data->get();
+        auto Channeldata = data.get();
         if(Channeldata == "END"){
             break;
         }
@@ -21,17 +21,17 @@ void worker_thread(Channel<std::string>* data)
 
 int main()
 {
-    Channel<std::string>* myChan = new Channel<std::string>;
+    Channel<std::string> myChan;
 
-    myChan->put("Hello");
-    myChan->put("World");
+    myChan.put("Hello");
+    myChan.put("World");
 
-    std::thread worker(worker_thread,myChan);
+    std::thread worker(worker_thread,std::ref(myChan));
 
     while (true){
         std::string input;
         std::cin >> input;
-        myChan->put(input);
+        myChan.put(input);
         if(input == "END"){
             break;
         }
